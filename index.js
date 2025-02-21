@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000;
 
@@ -35,6 +35,44 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     const userCollection = client.db("Task-Manager-DB").collection("Users");
+    const taskCollection = client.db("Task-Manager-DB").collection("Tasks");
+
+    app.post("/tasks", async (req, res) => {
+        const task = req.body;
+        task.timestamp = new Date();
+        const result = await taskCollection.insertOne(task);
+        res.send(result);
+    });
+
+    app.get("/tasks", async (req, res) => {
+        const email = req.query.email;
+        if (!email) {
+          return res.status(400).send({ message: "Email is required" });
+        }
+      
+        try {
+          const tasks = await taskCollection.find({ email }).toArray();
+          res.send(tasks);
+        } catch (error) {
+          res.status(500).send({ message: "Failed to fetch tasks", error });
+        }
+      });
+      
+
+    app.put("/tasks/:id", async (req, res) => {
+        const { id } = req.params;
+        const updatedTask = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = { $set: updatedTask };
+        const result = await taskCollection.updateOne(filter, updateDoc);
+        res.send(result);
+    });
+
+    app.delete("/tasks/:id", async (req, res) => {
+        const { id } = req.params;
+        const result = await taskCollection.deleteOne({ _id: new ObjectId(id) });
+        res.send(result);
+    });
 
     app.post("/users", async (req, res) => {
         const user = req.body;

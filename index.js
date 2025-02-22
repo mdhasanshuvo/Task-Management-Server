@@ -8,6 +8,7 @@ const port = process.env.PORT || 5000;
 app.use(cors({
     origin: [
         'http://localhost:5173',
+        'https://task-management-auth-bc9fc.web.app'
     ],
     credentials: true
 }));
